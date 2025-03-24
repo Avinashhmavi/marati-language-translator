@@ -13,7 +13,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB file limit
 
 # Configure API keys (preferably use environment variables in production)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDchVYHSsulr4izilpCPlYR-NNp8ipitrc")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBAE0idVHp5uIzESbKDpCLlSEqx5ZxHnAQ")
 
 genai.configure(api_key=GEMINI_API_KEY)
 groq_client = Groq(api_key=GROQ_API_KEY)
