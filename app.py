@@ -6,13 +6,14 @@ from groq import Groq
 import gtts
 from io import BytesIO
 import re
+import os
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB file limit
 
-# Configure API keys
-GROQ_API_KEY = "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"
-GEMINI_API_KEY = "AIzaSyDchVYHSsulr4izilpCPlYR-NNp8ipitrc"
+# Configure API keys (preferably use environment variables in production)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDchVYHSsulr4izilpCPlYR-NNp8ipitrc")
 
 genai.configure(api_key=GEMINI_API_KEY)
 groq_client = Groq(api_key=GROQ_API_KEY)
@@ -53,7 +54,6 @@ def convert():
 
         # Translation with improved accuracy
         if translation_method == 'groq':
-            # Optimized prompt for exact translation
             prompt = (
                 "Translate the following English text to Marathi accurately and literally. "
                 "Do not paraphrase, summarize, or alter the meaning. Preserve all details and context:\n\n"
@@ -62,12 +62,11 @@ def convert():
             response = groq_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-3.1-8b-instant",
-                temperature=0.1,  # Low temperature for precision
-                max_tokens=2000   # Adjust based on input length
+                temperature=0.1,
+                max_tokens=2000
             )
             marathi_text = response.choices[0].message.content.strip()
         else:
-            # Use Gemini with a precise instruction
             model = genai.GenerativeModel(gemini_model)
             prompt = (
                 "Translate the following English text to Marathi with exact accuracy. "
@@ -77,11 +76,11 @@ def convert():
             )
             response = model.generate_content(
                 prompt,
-                generation_config={"temperature": 0.1}  # Low temperature for precision
+                generation_config={"temperature": 0.1}
             )
             marathi_text = response.text.strip()
 
-        # Basic validation: Check if output is empty or nonsensical
+        # Basic validation
         if not marathi_text or re.match(r'^[a-zA-Z0-9\s]*$', marathi_text):
             return jsonify(error="Translation failed: Output is invalid or not in Marathi"), 500
 
@@ -105,4 +104,6 @@ def convert():
         return jsonify(error=f"Server error: {str(e)}"), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Bind to 0.0.0.0 and use PORT env var for Render
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 locally if PORT not set
+    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_DEBUG", "False") == "True")
